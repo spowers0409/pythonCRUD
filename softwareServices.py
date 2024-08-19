@@ -30,7 +30,7 @@ def createService():
         'ID': new_id,
         'Software Service': serviceName,
         '2 Year Support': twoYearSupport,
-        'Estimated Hours of W   ork': float(input("Enter the Estimated Hours of Work: ")),
+        'Estimated Hours of Work': float(input("Enter the Estimated Hours of Work: ")),
         'Cost': float(input("Enter the Cost: "))
     }
     collection.insert_one(service)
@@ -47,31 +47,39 @@ def readServices():
 def updateService():
     serviceID = int(input("\nEnter the ID of the service to update: "))
     updateField = input("Enter the field to update: (S)Software Service, (Y)2 Year Support, (E)Estimated Hours of Work, (C)Cost: ")
-    newValue = input(f"Enter the new value for {updateField}: ")
-
-    if updateField in ['E', 'e', 'C', 'c']:
-        newValue = float(newValue)
-    elif updateField in ['Y', 'y']:
-        if newValue in ['true', 'yes']:
+    
+    if updateField in ['Y', 'y', '2 year support']:
+        newValue = input("Is 2 Year Support available? (yes/no): ")
+        if newValue.lower() in ['true', 'yes']:
             newValue = True
         elif newValue.lower() in ['false', 'no']:
             newValue = False
         else:
             print("Invalid input. Defaulting to False.")
             newValue = False
-    elif updateField in ['S', 's']:
-        newValue = str(newValue)
-        updateField = "Software Service"
-    elif updateField in ['E', 'e']:
-        updateField = "Estimated Hours of Work"
-    elif updateField in ['C', 'c']:
-        updateField = "Cost"
+        updateField = "2 Year Support"
+    else:
+        newValue = input(f"Enter the new value for {updateField}: ")
+
+        if updateField in ['E', 'e']:
+            newValue = float(newValue)
+            updateField = "Estimated Hours of Work"
+        elif updateField in ['C', 'c']:
+            newValue = float(newValue)
+            updateField = "Cost"
+        elif updateField in ['S', 's']:
+            newValue = str(newValue)
+            updateField = "Software Service"
 
     result = collection.update_one({'ID': serviceID}, {'$set': {updateField: newValue}})
     if result.modified_count > 0:
         print("Service updated successfully.")
+        updatedService = collection.find_one({'ID': serviceID}, {"_id": 0, "ID": 1, "Software Service": 1, "2 Year Support": 1, "Estimated Hours of Work": 1, "Cost": 1})
+        print("\nUpdated Service:")
+        print(updatedService)
     else:
         print("No service found with the provided ID.")
+
 
 
 # Function to delete a software service
