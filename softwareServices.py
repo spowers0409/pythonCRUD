@@ -7,26 +7,35 @@ collection = db['ODINSS']
 
 # Function to get the next ID
 def serviceID():
-    last_service = collection.find_one(sort=[("ID", -1)])
-    if last_service and 'ID' in last_service:
-        return last_service['ID'] + 1
+    lastService = collection.find_one(sort=[("ID", -1)])
+    if lastService and 'ID' in lastService:
+        return lastService['ID'] + 1
     else:
         return 1
 
 # Function to create a software service
 def createService():
-    service_name = input("\nEnter a Software Service name: ")
+    serviceName = input("\nEnter a Software Service name: ")
+
+    supportInput = input("Is 2 year support available? ")
+    if supportInput in ['true', 'yes']:
+        twoYearSupport = True
+    elif supportInput in ['false', 'no']:
+        twoYearSupport = False
+    else:
+        print("Invalid, please select yes/no, or true/false")
+
     new_id = serviceID()
     service = {
         'ID': new_id,
-        'Software Service': service_name,
-        '2 Year Support': bool(input("Is 2 Year Support available? (True/False): ")),
-        'Estimated Hours of Work': float(input("Enter the Estimated Hours of Work: ")),
+        'Software Service': serviceName,
+        '2 Year Support': twoYearSupport,
+        'Estimated Hours of W   ork': float(input("Enter the Estimated Hours of Work: ")),
         'Cost': float(input("Enter the Cost: "))
     }
     collection.insert_one(service)
     print(f"\nService created with ID: {new_id}")
-    print(f"You have added: {service_name} to the database")
+    print(f"You have added: {serviceName} to the database")
 
 # Function to read and display all available software services
 def readServices():
@@ -36,27 +45,39 @@ def readServices():
 
 # Function to update a software service
 def updateService():
-    service_id = int(input("\nEnter the ID of the service to update: "))
-    field_to_update = input("Enter the field to update: (S)Software Service, (Y)2 Year Support, (E)Estimated Hours of Work, (C)Cost: ")
-    new_value = input(f"Enter the new value for {field_to_update}: ")
+    serviceID = int(input("\nEnter the ID of the service to update: "))
+    updateField = input("Enter the field to update: (S)Software Service, (Y)2 Year Support, (E)Estimated Hours of Work, (C)Cost: ")
+    newValue = input(f"Enter the new value for {updateField}: ")
 
-    if field_to_update in ['E', 'e', 'C', 'e']:
-        new_value = float(new_value)
-    elif field_to_update in ['Y', 'y']:
-        new_value = bool(new_value)
-    elif field_to_update in ['S', 's']:
-        new_value = str(new_value)
+    if updateField in ['E', 'e', 'C', 'c']:
+        newValue = float(newValue)
+    elif updateField in ['Y', 'y']:
+        if newValue in ['true', 'yes']:
+            newValue = True
+        elif newValue.lower() in ['false', 'no']:
+            newValue = False
+        else:
+            print("Invalid input. Defaulting to False.")
+            newValue = False
+    elif updateField in ['S', 's']:
+        newValue = str(newValue)
+        updateField = "Software Service"
+    elif updateField in ['E', 'e']:
+        updateField = "Estimated Hours of Work"
+    elif updateField in ['C', 'c']:
+        updateField = "Cost"
 
-    result = collection.update_one({'ID': service_id}, {'$set': {field_to_update: new_value}})
+    result = collection.update_one({'ID': serviceID}, {'$set': {updateField: newValue}})
     if result.modified_count > 0:
         print("Service updated successfully.")
     else:
         print("No service found with the provided ID.")
 
+
 # Function to delete a software service
 def deleteService():
-    service_id = int(input("\nEnter the ID of the service to delete: "))
-    result = collection.delete_one({'ID': service_id})
+    serviceID = int(input("\nEnter the ID of the service to delete: "))
+    result = collection.delete_one({'ID': serviceID})
     if result.deleted_count > 0:
         print("Service deleted successfully.")
     else:
